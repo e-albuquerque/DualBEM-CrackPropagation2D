@@ -3,6 +3,10 @@
 *.mod
 build/
 
+# Generated Gmsh meshes and large simulation output folders
+meshes/*.msh
+results/
+
 # Python cache
 __pycache__/
 *.py[cod]
