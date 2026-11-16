@@ -1,0 +1,9 @@
+# Fortran build artifacts
+*.o
+*.mod
+build/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
