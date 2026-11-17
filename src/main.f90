@@ -18,6 +18,7 @@ program fracture_2d
   use sif_mod
   use fatigue_prop_mod
   use io_mod
+  use omp_lib, only: omp_get_max_threads
   implicit none
 
   character(len=256)    :: input_file_name
@@ -32,7 +33,8 @@ program fracture_2d
 
   write(*, '(78("*"))')
   write(*, '(A)') "Fracture 2D - Dual-BEM (Discontinuous Quadratic Elements Edition)"
-  write(*, '(A,/)') "Propagacao Bidimensional de Trincas por Fadiga"
+  write(*, '(A)') "Propagacao Bidimensional de Trincas por Fadiga"
+  write(*, '(A,I0,/)') "Paralelizacao OpenMP ativa - Threads disponiveis: ", omp_get_max_threads()
 
   ! 1. Obtém o nome do arquivo de entrada (.dat) via argumento de linha de comando ou stdin
   if (command_argument_count() >= 1) then
