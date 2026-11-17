@@ -55,6 +55,7 @@ Para tornar o código mais didático, legível para os alunos e livre da entrada
 ```text
 CrackPropagation2D/
 ├── DissertaçãoBeatrizFonseca.pdf             # Dissertação de referência (Beatriz Fonseca, UFMG, 2023)
+├── Run_crack_propagation_2d.ipynb            # Jupyter Notebook didático passo a passo para os alunos
 ├── Makefile                                  # Compilação do solver Fortran 90 (gfortran + OpenMP + LAPACK)
 ├── README.md                                 # Documentação completa e validação numérica
 ├── input_data.py                             # Dicionário de casos e parâmetros físicos/numéricos dos exemplos
