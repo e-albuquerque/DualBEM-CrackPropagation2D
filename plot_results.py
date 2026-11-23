@@ -228,22 +228,30 @@ def parse_results_crack(file_path):
 
     with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
         for line in f:
-            line_str = line.strip()
+            line_str = line.split('****')[0].strip()
             if not line_str or line_str.startswith('Step'):
                 continue
             parts = line_str.split()
             if len(parts) >= 5:
                 try:
-                    steps.append(int(parts[0]))
-                    length.append(float(parts[1]))
-                    ki_1.append(float(parts[2]))
-                    kii_1.append(float(parts[3]))
-                    keq_1.append(float(parts[4]))
+                    st = int(parts[0])
+                    ln = float(parts[1])
+                    k1 = float(parts[2])
+                    k2 = float(parts[3])
+                    ke = float(parts[4])
+                    steps.append(st)
+                    length.append(ln)
+                    ki_1.append(k1)
+                    kii_1.append(k2)
+                    keq_1.append(ke)
                     if len(parts) >= 8:
+                        k1_2 = float(parts[5])
+                        k2_2 = float(parts[6])
+                        ke_2 = float(parts[7])
                         has_tip_2 = True
-                        ki_2.append(float(parts[5]))
-                        kii_2.append(float(parts[6]))
-                        keq_2.append(float(parts[7]))
+                        ki_2.append(k1_2)
+                        kii_2.append(k2_2)
+                        keq_2.append(ke_2)
                 except ValueError:
                     continue
 

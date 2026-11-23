@@ -63,6 +63,7 @@ CrackPropagation2D/
 ├── run_all_examples.py                       # Script automatizado que roda e valida todos os casos da dissertação
 ├── plot_mesh_bc.py                           # Visualização da malha descontínua e condições de contorno (.png)
 ├── plot_results.py                           # Pós-processador gráfico (Figuras 5.26 a 5.30, SIFs, Rainflow)
+├── animate_propagation.py                    # Gerador de animações em vídeo (.mp4) da propagação da trinca
 ├── bin/
 │   └── fracture_2d.exe                       # Executável compilado estaticamente (gfortran + OpenMP + LAPACK)
 ├── meshes/                                   # Arquivos geométricos .geo (Gmsh) e malhas .msh geradas
@@ -132,6 +133,9 @@ python preproc.py Chambers_CMM_4
 
 # 2. Gerar todas as figuras de pós-processamento (Figuras 5.26 a 5.30, SIFs, dashboard):
 python plot_results.py results\Chambers_CMM_4 --output-dir examples --scale 40
+
+# 3. Gerar a animação em vídeo (.mp4) da propagação da trinca:
+python animate_propagation.py results\Chambers_CMM_4 --scale 40 --fps 6
 ```
 
 ### 4.4. Execução Automatizada de Todos os Exemplos da Dissertação
