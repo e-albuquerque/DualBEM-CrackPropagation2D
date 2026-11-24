@@ -18,23 +18,27 @@ program fracture_2d
   use sif_mod
   use fatigue_prop_mod
   use io_mod
-  use omp_lib, only: omp_get_max_threads
+  !$ use omp_lib, only: omp_get_max_threads
   implicit none
 
-  character(len=256)    :: input_file_name
+  character(len=512)    :: input_file_name
   real(dp), allocatable :: a(:,:), f(:)
   real(dp), allocatable :: rf_amax(:), rf_R(:)
-  real                  :: t1, t2, t_sf, t_ss, t_ip, t_cr
-  integer               :: n, steps, rf_cycles, k_sif, m_sif
+  real                  :: t_sf, t_ss, t_ip, t_cr
+  integer               :: c1, c2, c_rate
+  integer               :: n, steps, rf_cycles, k_sif, m_sif, n_threads
   logical               :: bound_recovery, variable_ampl
   real(dp)              :: aq, amax
 
   t_sf = 0.0; t_ss = 0.0; t_ip = 0.0; t_cr = 0.0
+  n_threads = 1
+  !$ n_threads = omp_get_max_threads()
+  call system_clock(count_rate=c_rate)
 
   write(*, '(78("*"))')
   write(*, '(A)') "Fracture 2D - Dual-BEM (Discontinuous Quadratic Elements Edition)"
   write(*, '(A)') "Propagacao Bidimensional de Trincas por Fadiga"
-  write(*, '(A,I0,/)') "Paralelizacao OpenMP ativa - Threads disponiveis: ", omp_get_max_threads()
+  write(*, '(A,I0,/)') "Threads OpenMP disponiveis: ", n_threads
 
   ! 1. Obtém o nome do arquivo de entrada (.dat) via argumento de linha de comando ou stdin
   if (command_argument_count() >= 1) then
@@ -67,18 +71,18 @@ program fracture_2d
 
   ! 5. Montagem do sistema de equações no Passo 0
   write(*, '(1X,A)') "Montando o sistema de equacoes Dual-BEM (Passo 0)..."
-  call cpu_time(t1)
+  call system_clock(c1)
   allocate(a(2*bn_num, 2*bn_num), f(2*bn_num))
   call assembler(aq, a, f)
-  call cpu_time(t2)
-  t_sf = t2 - t1
+  call system_clock(c2)
+  t_sf = real(c2 - c1) / real(max(c_rate, 1))
 
   ! 6. Solução do sistema linear via LAPACK (DGESV)
   write(*, '(1X,A)') "Resolvendo o sistema linear..."
-  call cpu_time(t1)
+  call system_clock(c1)
   call solve_linear_system(a, f)
-  call cpu_time(t2)
-  t_ss = t2 - t1
+  call system_clock(c2)
+  t_ss = real(c2 - c1) / real(max(c_rate, 1))
   deallocate(a)
 
   ! 7. Recuperação dos deslocamentos, trações e tensões no contorno
@@ -90,23 +94,23 @@ program fracture_2d
   call evaluate_stress_strain_on_boundary_nodes(bound_recovery)
 
   ! 8. Avaliação dos pontos internos no Passo 0
-  call create_internal_points(20, 2)
+  if (cr_num > 0) call create_internal_points(20, 2)
   if (in_num > 0) then
-    call cpu_time(t1)
+    call system_clock(c1)
     call evaluate_internal_points()
-    call cpu_time(t2)
-    t_ip = t2 - t1
+    call system_clock(c2)
+    t_ip = real(c2 - c1) / real(max(c_rate, 1))
   end if
 
   ! 9. Avaliação dos Fatores de Intensidade de Tensão e propagação incremental
   if (cr_num > 0) then
     write(*, '(1X,A)') "Avaliando Fatores de Intensidade de Tensao (Passo 0)..."
-    call cpu_time(t1)
+    call system_clock(c1)
     call stress_intensity_factor_evaluation()
     call propagation_angle()
     call equivalent_k()
-    call cpu_time(t2)
-    t_cr = t2 - t1
+    call system_clock(c2)
+    t_cr = real(c2 - c1) / real(max(c_rate, 1))
 
     ! Arquivos de saída do Passo 0
     call results_output(t_sf, t_ss, t_ip, t_cr, 0)
@@ -124,10 +128,10 @@ program fracture_2d
 
         call create_internal_points(20, 2)
         if (in_num > 0) then
-          call cpu_time(t1)
+          call system_clock(c1)
           call evaluate_internal_points()
-          call cpu_time(t2)
-          t_ip = t2 - t1
+          call system_clock(c2)
+          t_ip = real(c2 - c1) / real(max(c_rate, 1))
         end if
 
         if (mod(n, 2) == 0) then
@@ -143,6 +147,10 @@ program fracture_2d
       end do
       write(*, '(1X,A)') "Propagacao concluida com sucesso!"
     end if
+  else
+    ! Problema elastostático sem trinca: grava resultados de contorno/pontos internos e XML
+    call results_output(t_sf, t_ss, t_ip, t_cr, 0)
+    call output_file_for_insane(0)
   end if
 
   write(*, '(78("*"))')

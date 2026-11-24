@@ -56,7 +56,7 @@ contains
 
     a = 1.0_dp / (lamb_1 + lamb_2)
     d2ni(1) =  2.0_dp * a / lamb_1
-    d2ni(2) =  2.0_dp / (lamb_1 * lamb_2)
+    d2ni(2) = -2.0_dp / (lamb_1 * lamb_2)
     d2ni(3) =  2.0_dp * a / lamb_2
   end subroutine second_deriv_intrp_func_1d
 

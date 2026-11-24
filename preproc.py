@@ -167,47 +167,29 @@ def compute_curve_s_params(curve_elems: list[tuple[np.ndarray, np.ndarray, np.nd
     """
     Calcula a coordenada paramétrica normalizada s in [0, 1] nos 3 nós funcionais
     descontínuos (eta = -lamb, 0, +lamb) de cada elemento ao longo de uma curva,
-    reproduzindo exatamente a parametrização por comprimento de corda de
-    `get_parametric_coords` na dissertação.
+    por comprimento de corda acumulado ao longo da cadeia de elementos.
     """
     n_el = len(curve_elems)
     if n_el == 0:
         return []
 
-    # Constrói a lista de 2*n_el + 1 pontos geométricos da curva
-    pts = [curve_elems[0][0]]
+    raw_s = []
+    acc = 0.0
     for p1, p2, p3 in curve_elems:
-        pts.append(p2)
-        pts.append(p3)
+        n1 = eval_quad_point(p1, p2, p3, -lamb)
+        n2 = p2
+        n3 = eval_quad_point(p1, p2, p3, +lamb)
 
-    n_pts = len(pts)  # 2 * n_el + 1
-    s_pts = np.zeros(n_pts, dtype=float)
+        d1 = acc + float(np.linalg.norm(n1 - p1))
+        d2 = d1 + float(np.linalg.norm(n2 - n1))
+        d3 = d2 + float(np.linalg.norm(n3 - n2))
+        acc = d3 + float(np.linalg.norm(p3 - n3))
+        raw_s.append((d1, d2, d3))
 
-    pa = eval_quad_point(pts[0], pts[1], pts[2], -lamb)
-    r0 = float(np.linalg.norm(pa - pts[0]))
-    s_pts[0] = r0
+    if acc <= 0.0:
+        return [(0.0, 0.0, 0.0) for _ in range(n_el)]
 
-    for i in range(1, n_pts - 1):
-        r0 += float(np.linalg.norm(pts[i] - pa))
-        s_pts[i] = r0
-        pa = pts[i]
-
-    pb = eval_quad_point(pts[-3], pts[-2], pts[-1], +lamb)
-    r0 += float(np.linalg.norm(pb - pts[-2]))
-    s_pts[-1] = r0
-    r0 += float(np.linalg.norm(pts[-1] - pb))
-
-    if r0 > 0.0:
-        s_pts /= r0
-
-    # Para cada elemento i (0..n_el-1), associa s nos 3 nós
-    s_per_elem = []
-    for i in range(n_el):
-        s1 = float(s_pts[i])
-        s2 = float(s_pts[2 * i + 1])
-        s3 = float(s_pts[2 * i + 2])
-        s_per_elem.append((s1, s2, s3))
-    return s_per_elem
+    return [(d1 / acc, d2 / acc, d3 / acc) for (d1, d2, d3) in raw_s]
 
 
 def generate_internal_points(rects: list[dict]) -> list[tuple[float, float]]:
@@ -678,12 +660,20 @@ def main():
         default="1",
         help="Número (1..8) ou nome do problema (ex.: Chambers_CMM_4, Dowling_11.6_variable_ampl, s521_single_edge, all).",
     )
+    parser.add_argument("--list", action="store_true", help="Lista todos os problemas configurados em input_data.py e encerra.")
     parser.add_argument("--aw", type=float, default=0.4, help="Razão a/w ou 2a/w para os problemas 7 e 8 (padrão: 0.4).")
     parser.add_argument("--s51-variant", default="da0_01_r11", choices=["da0_01_r11", "da0_0125_r105"], help="Esquema de avanço da Seção 5.1.")
     parser.add_argument("-o", "--output-dir", default=None, help="Diretório de saída para o arquivo .dat e a imagem .png (padrão: inputs/).")
     parser.add_argument("--no-plot", action="store_true", help="Não gera a figura <id>_mesh_bc.png.")
     parser.add_argument("--dpi", type=int, default=300, help="Resolução da imagem .png (padrão: 300).")
     args = parser.parse_args()
+
+    if args.list:
+        print("Problemas disponiveis em input_data.py:")
+        for p_id in range(1, 9):
+            cfg = input_data(problem=p_id)
+            print(f"  [{p_id}] {cfg['analysis_id']:<28s} | {cfg['title']} (meshes/{cfg['file_name']}.geo)")
+        return
 
     out_dir = pathlib.Path(args.output_dir) if args.output_dir else None
 

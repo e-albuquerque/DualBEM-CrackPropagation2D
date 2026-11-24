@@ -29,10 +29,10 @@ Uso:
     python plot_results.py <diretorio_ou_prefixo> [opções]
 
 Exemplos:
-    python plot_results.py scratch/val_chambers
-    python plot_results.py scratch/val_dowling --scale 50
-    python plot_results.py scratch/val_chambers --step 38 --scale 40 --dpi 300
-    python plot_results.py scratch/val_chambers/Chambers_CMM_4_geometry_crack_001.txt
+    python plot_results.py results/Chambers_CMM_4
+    python plot_results.py results/Dowling_11.6_variable_ampl --scale 50
+    python plot_results.py results/Chambers_CMM_4 --step 38 --scale 40 --dpi 300
+    python plot_results.py results/Chambers_CMM_4/Chambers_CMM_4_geometry_crack_001.txt
 ================================================================================
 """
 
@@ -480,7 +480,8 @@ def plot_final_mesh(xml_data, output_path, title_prefix="", step_num=None):
                         [nodes[n1]['y'], nodes[n2]['y']],
                         color='#2b2b2b', lw=1.0)
         elif len(inc) == 3:
-            n1, nmid, n2 = inc
+            # Convenção INSANE BL3: [n1, n3, n2] -> início, fim, nó médio
+            n1, n2, nmid = inc
             if n1 in nodes and nmid in nodes and n2 in nodes:
                 xi = np.linspace(-1, 1, 15)
                 N1 = 0.5 * xi * (xi - 1)
@@ -535,7 +536,8 @@ def plot_deformed_mesh(xml_data, scale_factor, output_path, title_prefix="", ste
                 all_x_def.extend(x_def)
                 all_y_def.extend(y_def)
         elif len(inc) == 3:
-            n1, nmid, n2 = inc
+            # Convenção INSANE BL3: [n1, n3, n2] -> início, fim, nó médio
+            n1, n2, nmid = inc
             if n1 in nodes and nmid in nodes and n2 in nodes:
                 xi = np.linspace(-1, 1, 20)
                 N1 = 0.5 * xi * (xi - 1)
@@ -550,8 +552,8 @@ def plot_deformed_mesh(xml_data, scale_factor, output_path, title_prefix="", ste
                     ax.plot(x0 + scale_factor * ux, y0 + scale_factor * uy, color='crimson', lw=1.0, alpha=0.9)
                 all_x.extend(x0)
                 all_y.extend(y0)
-                all_x_def.extend(x_orig if len(inc) == 2 else [x0[0], x0[-1]])
-                all_y_def.extend(y_orig if len(inc) == 2 else [y0[0], y0[-1]])
+                all_x_def.extend((x0 + scale_factor * ux).tolist())
+                all_y_def.extend((y0 + scale_factor * uy).tolist())
 
     from matplotlib.lines import Line2D
     legend_elements = [
@@ -826,7 +828,8 @@ def plot_summary_dashboard(files_info, geom_list, res_list, fat_list, xml_data, 
                              [nodes[n1]['y'] + scale_factor * nodes[n1]['uy'], nodes[n2]['y'] + scale_factor * nodes[n2]['uy']],
                              'r-', lw=0.9, alpha=0.85)
             elif len(inc) == 3:
-                n1, nmid, n2 = inc
+                # Convenção INSANE BL3: [n1, n3, n2] -> início, fim, nó médio
+                n1, n2, nmid = inc
                 if n1 in nodes and nmid in nodes and n2 in nodes:
                     xi = np.linspace(-1, 1, 15)
                     N1 = 0.5 * xi * (xi - 1)
@@ -908,10 +911,10 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Exemplos de uso:
-  python plot_results.py scratch/val_chambers
-  python plot_results.py scratch/val_dowling --scale 50
-  python plot_results.py scratch/val_chambers --step 38 --scale 40
-  python plot_results.py scratch/val_chambers/Chambers_CMM_4_geometry_crack_001.txt
+  python plot_results.py results/Chambers_CMM_4
+  python plot_results.py results/Dowling_11.6_variable_ampl --scale 50
+  python plot_results.py results/Chambers_CMM_4 --step 38 --scale 40
+  python plot_results.py results/Chambers_CMM_4/Chambers_CMM_4_geometry_crack_001.txt
         """
     )
     parser.add_argument("path", help="Caminho do diretório de saída, prefixo de análise ou arquivo de resultado")

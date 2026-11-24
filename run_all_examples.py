@@ -9,15 +9,18 @@ run_all_examples.py — Executa todos os exemplos de validação usando o novo f
 """
 
 import math
+import os
 import pathlib
 import shutil
 import subprocess
+import sys
 import time
 
 from preproc import run_preproc
 
 ROOT = pathlib.Path(__file__).resolve().parent
-EXE = ROOT / "bin" / "fracture_2d.exe"
+EXE_NAME = "fracture_2d.exe" if os.name == "nt" else "fracture_2d"
+EXE = ROOT / "bin" / EXE_NAME
 RESULTS_DIR = ROOT / "results"
 EXAMPLES_DIR = ROOT / "examples"
 
@@ -67,9 +70,13 @@ def run_solver(problem, aw: float = 0.4, s51_variant: str = "da0_01_r11", sub_na
     aid = data["analysis_id"]
     folder_name = sub_name or aid
     run_dir = RESULTS_DIR / folder_name
-    if run_dir.exists():
-        shutil.rmtree(run_dir)
     run_dir.mkdir(parents=True, exist_ok=True)
+    for stale in run_dir.glob("*"):
+        if stale.is_file():
+            try:
+                stale.unlink()
+            except OSError:
+                pass
 
     dat_in_run = run_dir / dat_tmp.name
     shutil.copy2(dat_tmp, dat_in_run)
@@ -309,5 +316,4 @@ def main():
 
 
 if __name__ == "__main__":
-    import sys
     main()

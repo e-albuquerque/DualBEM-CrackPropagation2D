@@ -4,8 +4,13 @@
 # ==============================================================================
 
 FC      := gfortran
-STATIC  ?= 1
 OPENMP  ?= 1
+
+ifeq ($(OS),Windows_NT)
+  STATIC ?= 1
+else
+  STATIC ?= 0
+endif
 
 FFLAGS  := -O3 -Wall -Wextra -Wno-unused-dummy-argument -Wno-maybe-uninitialized
 LDFLAGS :=
@@ -56,7 +61,7 @@ all: $(TARGET)
 
 $(TARGET): $(OBJS)
 	@$(MKDIR_BIN)
-	$(FC) $(FFLAGS) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
+	$(FC) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.f90
 	@$(MKDIR_BUILD)

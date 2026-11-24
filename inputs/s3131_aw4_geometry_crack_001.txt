@@ -1,2 +1,0 @@
-  Step   Initial_x     Initial_y      Final_x       Final_y        Length
-    0   0.00000E+00   0.50000E+01   0.40000E+01   0.50000E+01   0.40000E+01

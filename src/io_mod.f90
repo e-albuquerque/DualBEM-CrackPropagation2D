@@ -58,12 +58,15 @@ contains
     real(dp) :: el, nu, lb1_j, lb2_j
     real(dp) :: x1, y1, x2, y2, lb1, lb2, val1_a, val1_b, val2_a, val2_b
     real(dp) :: da0, r_da, da_max, R_in, C0_in, m_in, gama_in, kth_in, kic_in, a_val
-    integer  :: bie_in, bc_dir_in, bck1, bck2, inc(3), ext_el(4), nf1, nf2
+    integer  :: bie_in, bc_dir_in, bck1, bck2, inc(3), ext_el(4), nf1, nf2, ios
     real(dp) :: cr_len
     integer, parameter :: u_in = 10
 
     write(*, '(1X,A,A)') "Lendo arquivo de dados pre-processado: ", trim(file_name)
-    open(unit=u_in, file=trim(file_name), status='old', action='read')
+    open(unit=u_in, file=trim(file_name), status='old', action='read', iostat=ios)
+    if (ios /= 0) then
+      call error_message_stop("Nao foi possivel abrir o arquivo de entrada: " // trim(file_name))
+    end if
 
     ! 1. Cabeçalho e propriedades do material
     call next_data_line(u_in, line)
@@ -567,7 +570,8 @@ contains
       keq    = amax * cr_list(i)%keq(1)
       keq_2  = amax * cr_list(i)%keq(2)
 
-      if (n > 0 .and. (keq > K_IC_val .or. keq_2 > K_IC_val)) then
+      if (n > 0 .and. K_IC_val > 0.0_dp .and. &
+          (keq > K_IC_val .or. (cr_list(i)%tips_num == 2 .and. keq_2 > K_IC_val))) then
         if (cr_list(i)%tips_num == 1) then
           write(u_cr, 105) n, length, ki, kii, keq
         else
